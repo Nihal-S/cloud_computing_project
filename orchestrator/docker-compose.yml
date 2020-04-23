@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  orchestrator:
+    build: .
+    image: orchestrator:latest
+    container_name: orchestrator
+    command: python orchestrator.py
+    restart: always
+    environment:
+    - TEAM_NAME=CC_0188_1000_1324_1644
+    ports:
+        - "80:80"
