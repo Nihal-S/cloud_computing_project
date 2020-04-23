@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  orchestrator:
+    build: .
+    image: orchestrator:latest
+    container_name: orchestrator
+    command: python orchestrator.py
+    restart: always
+    environment:
+    - TEAM_NAME=CC_0188_1000_1324_1644
+    ports:
+        - "12345:12345"
+
+  users:
+    build: .
+    image: user:latest
+    container_name: users
+    command: python users.py
+    restart: always
+    environment:
+    - TEAM_NAME=CC_0188_1000_1324_1644
+    ports:
+        - "8080:8080"
+
+  rides:
+    build: .
+    image: ride:latest
+    container_name: rides
+    command: python rides.py
+    restart: always
+    environment:
+    - TEAM_NAME=CC_0188_1000_1324_1644
+    ports:
+        - "8000:8000"
+
+  master:
+    build: .
+    image: master:latest
+    container_name: users
+    command: python woker.py 1
+    restart: always
+    environment:
+    - TEAM_NAME=CC_0188_1000_1324_1644
+    ports:
+        - "5050:5050"
+
+  slave:
+    build: .
+    image: slave:latest
+    container_name: slave
+    command: python woker.py 0
+    restart: always
+    environment:
+    - TEAM_NAME=CC_0188_1000_1324_1644
+    ports:
+        - "5060:5060"

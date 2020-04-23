@@ -10,6 +10,6 @@ services:
     environment:
     - TEAM_NAME=CC_0188_1000_1324_1644
     ports:
-        - "80:80"
+        - "8000:8000"
 
  

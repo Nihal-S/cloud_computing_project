@@ -73,10 +73,10 @@ def create_ride():
         source = request.json['source']
         destination = request.json['destination']
         name = created_by
-        names = requests.get('http://cc-a3-1486621832.us-east-1.elb.amazonaws.com/api/v1/users')
+        names = requests.get('http://users:8080/api/v1/users')
         names = names.json()
         #names = names.json()
-        areanames = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "Areaname","columns":"Area_no","where":"Area_name!='hdughuhuhfguihufdhuidhgfuhduhgiu'"})
+        areanames = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "Areaname","columns":"Area_no","where":"Area_name!='hdughuhuhfguihufdhuidhgfuhduhgiu'"})
         areanames =areanames.json()
         #print(areanames)
         #l = []
@@ -104,7 +104,7 @@ def create_ride():
             print("inside ")
             insert = "'"+created_by+"',"+"'"+timestamp+"',"+"'"+source+"','"+destination+"'"
             print(insert)
-            r = requests.post('http://0.0.0.0:12345/api/v1/db/write', json={"insert": insert,"column":"created_by,timestamp,source,destination","table":"ride","what":"insert"})
+            r = requests.post('http://orchestrator:12345/api/v1/db/write', json={"insert": insert,"column":"created_by,timestamp,source,destination","table":"ride","what":"insert"})
             res = jsonify()
             # res.statuscode = 201
             return res, 201
@@ -128,7 +128,7 @@ def upcoming_ride():
         if request.method == "GET":
             source = request.args.get('source')
             destination = request.args.get('destination')
-            areanames = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "Areaname","columns":"Area_no","where":"Area_name!='hdughuhuhfguihufdhuidhgfuhduhgiu'"})
+            areanames = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "Areaname","columns":"Area_no","where":"Area_name!='hdughuhuhfguihufdhuidhgfuhduhgiu'"})
             areanames = areanames.json()
             l = []
             for i in areanames:
@@ -140,7 +140,7 @@ def upcoming_ride():
             if(not source or not destination):
                 return jsonify(), 204
             if(source in areanames and destination in areanames):
-                names = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id,created_by,timestamp","where":"source='"+source+"' and destination='"+destination+"'"})
+                names = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id,created_by,timestamp","where":"source='"+source+"' and destination='"+destination+"'"})
                 names = names.json()
                 l = []
                 for i in names:
@@ -175,7 +175,7 @@ def list_rides(ride_id):
         f.write(str(count))
         f.close()
         ride_id = str(ride_id)  
-        ride_ids = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id","where":"source!='hasdfuhuhasujdhjkh'"})
+        ride_ids = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id","where":"source!='hasdfuhuhasujdhjkh'"})
         ride_ids = ride_ids.json()
 
         l = []
@@ -187,8 +187,8 @@ def list_rides(ride_id):
         if(not ride_id):
             return jsonify, 204
         if(ride_id in ride_ids):
-            result = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id,created_by,timestamp,source,destination","where":"ride_id='"+ride_id+"'"})
-            result1 = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "join_ride","columns":"username","where":"ride_id='"+ride_id+"'"})
+            result = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id,created_by,timestamp,source,destination","where":"ride_id='"+ride_id+"'"})
+            result1 = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "join_ride","columns":"username","where":"ride_id='"+ride_id+"'"})
             result1 = result1.json()
             result = result.json()
             l = []
@@ -227,10 +227,10 @@ def join_rides(ride_id):
         f.write(str(count))
         f.close()
         ride_id = str(ride_id)
-        ride_ids = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id","where":"ride_id!='2341356'"})
+        ride_ids = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id","where":"ride_id!='2341356'"})
         ride_ids = ride_ids.json()
         print(ride_ids)
-        names = requests.get('http://cc-a3-1486621832.us-east-1.elb.amazonaws.com/api/v1/users')
+        names = requests.get('http://users:8080/api/v1/users')
         names = names.json()
         l = []
         for i in ride_ids:
@@ -250,7 +250,7 @@ def join_rides(ride_id):
         print(ride_id in ride_ids)
         if((username in names) and ((ride_id) in ride_ids)):
             insert = "'"+ride_id+"','"+username+"'"
-            requests.post('http:/0.0.0.0:12345//api/v1/db/write', json={"insert": insert,"column":"ride_id,username","table":"join_ride","what":"insert"})
+            requests.post('http:/orchestrator:12345//api/v1/db/write', json={"insert": insert,"column":"ride_id,username","table":"join_ride","what":"insert"})
             res = jsonify()
             # res.statuscode = 201
             return res, 200
@@ -278,7 +278,7 @@ def delete_ride(ride_id):
         f.write(str(count))
         f.close()
         ride_id = str(ride_id)
-        ride_ids = requests.post('http://0.0.0.0:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id","where":"ride_id!='2341356'"})
+        ride_ids = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "ride","columns":"ride_id","where":"ride_id!='2341356'"})
         ride_ids = ride_ids.json()
         l = []
         for i in ride_ids:
@@ -287,7 +287,7 @@ def delete_ride(ride_id):
         print(ride_ids)
         print(ride_id)
         if(int(ride_id) in ride_ids):
-            requests.post('http://0.0.0.0:12345/api/v1/db/write', json={"insert": "ride_id='"+ride_id+"'","column":"username,password","table":"ride","what":"delete"})
+            requests.post('http://orchestrator:12345/api/v1/db/write', json={"insert": "ride_id='"+ride_id+"'","column":"username,password","table":"ride","what":"delete"})
             res = jsonify()
             # res.statuscode = 201
             return res, 200
