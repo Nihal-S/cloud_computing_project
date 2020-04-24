@@ -1,6 +1,13 @@
 version: '3'
 
 services:
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: rabbitmq
+    ports:
+      - "5672:5672"
+      
   orchestrator:
     build: .
     image: orchestrator:latest
