@@ -37,8 +37,8 @@ services:
   master:
     build: .
     image: master:latest
-    container_name: users
-    command: python woker.py 1
+    container_name: master
+    command: python worker.py 1
     restart: always
     environment:
     - TEAM_NAME=CC_0188_1000_1324_1644
@@ -49,7 +49,7 @@ services:
     build: .
     image: slave:latest
     container_name: slave
-    command: python woker.py 0
+    command: python worker.py 0
     restart: always
     environment:
     - TEAM_NAME=CC_0188_1000_1324_1644

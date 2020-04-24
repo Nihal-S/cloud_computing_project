@@ -5,7 +5,7 @@ import pika
 import sys
 
 connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host='rabbitmq'))
+    pika.ConnectionParameters(host='localhost'))
 
 channel = connection.channel()
 
