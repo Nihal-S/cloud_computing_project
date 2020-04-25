@@ -72,13 +72,14 @@ def add():
         password = request.json['password']
         insert = "'"+name+"','"+password+"'"
         names = requests.post('http://orchestrator:12345/api/v1/db/read', json={"table": "users","columns":"username","where":"username!='hdughuhuhfguihufdhuidhgfuhduhgiu'"})
+        print(names)
         names = names.json()
         l = []
         for i in names:
             l.append(i[0])
         names = l
         if(len(password) == 40 and if_hex(password) and name not in names):
-            requests.post('http:/orchestrator:12345//api/v1/db/write', json={"insert": insert,"column":"username,password","table":"users","what":"insert"})
+            requests.post('http://orchestrator:12345/api/v1/db/write', json={"insert": insert,"column":"username,password","table":"users","what":"insert"})
             res = jsonify()
             #res.statuscode = 201
             return res, 201

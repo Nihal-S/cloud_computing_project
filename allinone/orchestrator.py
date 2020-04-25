@@ -124,11 +124,31 @@ def read():
     print(query)
     reader = reading()
     response = reader.call("readQ",query)
-    #print(response)
-    #response = fibonacci_rpc.call("readQ",1)
-    response = json.loads(response)
     print(response)
-    return json.dumps(response)
+    # response = fibonacci_rpc.call("readQ",1)
+    # response = json.loads(response)
+    print(response)
+    return response, 200
+
+@app.route('/api/v1/db/clear', methods=['POST'])
+def clear_db():
+    # print("Clearing DB")
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+    channel = connection.channel()
+
+    channel.queue_declare(queue='writeQ', durable=True)
+    queries = []
+    queries.append("DELETE FROM users")
+    queries.append("DELETE FROM ride")
+    queries.append("DELETE FROM join_ride")
+    for query in queries:
+        channel.basic_publish(exchange='', routing_key='writeQ', body= query)
+        print("sent query", query)
+    connection.close()  
+    # response = write.call("writeQ",query)
+    # print(response)
+    res = jsonify()
+    return res, 200
 
 
 if __name__ == '__main__':
