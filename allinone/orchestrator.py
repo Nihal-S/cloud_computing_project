@@ -9,41 +9,42 @@ import uuid
 app = Flask(__name__)
 
 
-class writing(object):
-    def __init__(self):
-        self.connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='rabbitmq'))
 
-        self.channel = self.connection.channel()
+# class writing(object):
+#     def __init__(self):
+#         self.connection = pika.BlockingConnection(
+#             pika.ConnectionParameters(host='rabbitmq'))
 
-        result = self.channel.queue_declare(queue='writeResponseQ', durable=True)
-        self.callback_queue = result.method.queue
+#         self.channel = self.connection.channel()
 
-        self.channel.basic_consume(
-            queue=self.callback_queue,
-            on_message_callback=self.on_response,
-            auto_ack=True)
+#         result = self.channel.queue_declare(queue='writeResponseQ', durable=True)
+#         self.callback_queue = result.method.queue
 
-    def on_response(self, ch, method, props, body):
-        if self.corr_id == props.correlation_id:
-            self.response = body
-            ch.basic_ack(delivery_tag = method.delivery_tag)
+#         self.channel.basic_consume(
+#             queue=self.callback_queue,
+#             on_message_callback=self.on_response,
+#             auto_ack=True)
 
-    def call(self, q , n):
-        self.response = None
-        self.corr_id = str(uuid.uuid4())
-        self.channel.queue_declare(queue = 'writeQ', durable=True)
-        self.channel.basic_publish(
-            exchange='',
-            routing_key='writeQ',
-            properties=pika.BasicProperties(
-                reply_to=self.callback_queue,
-                correlation_id=self.corr_id,
-            ),
-            body=n)
-        while self.response is None:
-            self.connection.process_data_events()
-        return (self.response.decode("utf-8"))
+#     def on_response(self, ch, method, props, body):
+#         if self.corr_id == props.correlation_id:
+#             self.response = body
+#             ch.basic_ack(delivery_tag = method.delivery_tag)
+
+#     def call(self, q , n):
+#         self.response = None
+#         self.corr_id = str(uuid.uuid4())
+#         self.channel.queue_declare(queue = 'writeQ', durable=True)
+#         self.channel.basic_publish(
+#             exchange='',
+#             routing_key='writeQ',
+#             properties=pika.BasicProperties(
+#                 reply_to=self.callback_queue,
+#                 correlation_id=self.corr_id,
+#             ),
+#             body=n)
+#         while self.response is None:
+#             self.connection.process_data_events()
+#         return (self.response.decode("utf-8"))
 
 class reading(object):
 
@@ -86,6 +87,7 @@ class reading(object):
 
 @app.route('/api/v1/db/write', methods=['POST'])
 def write_db():
+    print("write")
     data = request.json['insert']
     column = request.json['column']
     table = request.json['table']
@@ -97,15 +99,24 @@ def write_db():
     else:
         print("inserting")
         query = "INSERT INTO "+table+" ("+column+") "+"VALUES ("+data+")"
-    write = writing()
-    response = write.call("writeQ",query)
-    print(response)
+    # write = writing()
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+    channel = connection.channel()
+
+    channel.queue_declare(queue='writeQ', durable=True)
+
+    channel.basic_publish(exchange='', routing_key='writeQ', body= query)
+    print("sent query", query)
+    connection.close()  
+    # response = write.call("writeQ",query)
+    # print(response)
     res = jsonify()
     return res, 201
 
 #9
 @app.route('/api/v1/db/read', methods=['POST'])
 def read():
+    print("read")
     table = request.json['table']
     columns = request.json['columns']
     where = request.json['where']

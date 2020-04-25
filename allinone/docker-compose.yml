@@ -12,8 +12,10 @@ services:
     build: .
     image: orchestrator:latest
     container_name: orchestrator
-    command: python orchestrator.py
+    command: sh -c "sleep 25 && python -u orchestrator.py"
     restart: always
+    depends_on: 
+      - rabbitmq
     environment:
     - TEAM_NAME=CC_0188_1000_1324_1644
     ports:
@@ -45,7 +47,9 @@ services:
     build: .
     image: master:latest
     container_name: master
-    command: python worker.py 1
+    command: sh -c "sleep 25 && python -u worker.py 1"
+    depends_on: 
+      - rabbitmq
     restart: always
     environment:
     - TEAM_NAME=CC_0188_1000_1324_1644
@@ -56,8 +60,10 @@ services:
     build: .
     image: slave:latest
     container_name: slave
-    command: python worker.py 0
+    command: sh -c "sleep 25 && python -u worker.py 0"
     restart: always
+    depends_on: 
+      - rabbitmq
     environment:
     - TEAM_NAME=CC_0188_1000_1324_1644
     ports:
