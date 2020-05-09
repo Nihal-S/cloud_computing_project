@@ -292,4 +292,4 @@ if __name__ == '__main__':
     spawn_slave()
     print("slave")
     app.debug=False
-    app.run(host="0.0.0.0",port=12345,use_reloader=False)
+    app.run(host="0.0.0.0",port=80,use_reloader=False)
