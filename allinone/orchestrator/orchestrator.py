@@ -33,8 +33,8 @@ def start_zookeeping(children):
         if x=="master" :
             print("{} is the master".format(i))
             flag = 0
-    if flag and children:
-        zk.set("CC/"+children[0],b'master')
+    # if flag and children:
+        # zk.set("CC/"+children[0],b'master')
 
     
 def spawn_master():
