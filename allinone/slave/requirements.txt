@@ -4,4 +4,3 @@ pika
 docker
 schedule
 apscheduler
-kazoo

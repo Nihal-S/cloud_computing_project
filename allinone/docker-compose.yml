@@ -9,11 +9,15 @@ services:
       - "5672:5672"
       
   orchestrator:
-    build: .
+    build: ./orchestrator
     image: orchestrator:latest
     container_name: orchestrator
     command: sh -c "sleep 25 && python -u orchestrator.py"
     restart: always
+    volumes: 
+    - /var/run/docker.sock:/var/run/docker.sock
+    links: 
+      - rabbitmq
     depends_on: 
       - rabbitmq
     environment:
@@ -21,54 +25,69 @@ services:
     ports:
         - "12345:12345"
 
-  users:
-    build: .
-    image: user:latest
-    container_name: users
-    command: python users.py
-    depends_on: 
-      - orchestrator
-    restart: always
-    environment:
-    - TEAM_NAME=CC_0188_1000_1324_1644
-    ports:
-        - "8080:8080"
+  zookeeper:
+    container_name: zookeeper
+    hostname: zookeeper
+    image: zookeeper
+    ports: 
+      - "2181:2181"
 
-  rides:
-    build: .
-    image: ride:latest
-    container_name: rides
-    command: python rides.py
-    depends_on: 
-      - orchestrator
-    restart: always
-    environment:
-    - TEAM_NAME=CC_0188_1000_1324_1644
-    ports:
-        - "8000:8000"
 
-  master:
-    build: .
-    image: master:latest
-    container_name: master
-    command: sh -c "sleep 25 && python -u worker.py 1"
-    depends_on: 
-      - rabbitmq
-    restart: always
-    environment:
-    - TEAM_NAME=CC_0188_1000_1324_1644
-    ports:
-        - "5050:5050"
+  # users:
+  #   build: ./users
+  #   image: user:latest
+  #   container_name: users
+  #   command: python users.py
+  #   depends_on: 
+  #     - orchestrator
+  #   restart: always
+  #   environment:
+  #   - TEAM_NAME=CC_0188_1000_1324_1644
+  #   ports:
+  #       - "8080:8080"
 
-  slave:
-    build: .
-    image: slave:latest
-    container_name: slave
-    command: sh -c "sleep 25 && python -u worker.py 0"
-    restart: always
-    depends_on: 
-      - rabbitmq
-    environment:
-    - TEAM_NAME=CC_0188_1000_1324_1644
-    ports:
-        - "5060:5060"
+  # rides:
+  #   build: ./rides
+  #   image: ride:latest
+  #   container_name: rides
+  #   command: python rides.py
+  #   depends_on: 
+  #     - orchestrator
+  #   restart: always
+  #   environment:
+  #   - TEAM_NAME=CC_0188_1000_1324_1644
+  #   ports:
+  #       - "8000:8000"
+
+  # master:
+  #   build: ./master
+  #   image: master:latest
+  #   container_name: master
+  #   command: sh -c "sleep 25 && python -u worker.py 1"
+  #   # depends_on: 
+  #   #   - rabbitmq
+  #   restart: always
+  #   environment:
+  #   - TEAM_NAME=CC_0188_1000_1324_1644
+  #   ports:
+  #       - "5050:5050"
+    
+    
+networks: 
+  default:
+    external: 
+      name: allinone_default
+  
+
+# slave:
+  #   build: ./slave
+  #   image: slave:latest
+  #   container_name: slave
+  #   command: sh -c "sleep 25 && python -u worker.py 0"
+  #   restart: always
+  #   depends_on: 
+  #     - rabbitmq
+  #   environment:
+  #   - TEAM_NAME=CC_0188_1000_1324_1644
+  #   ports:
+  #       - "5060:5060"
