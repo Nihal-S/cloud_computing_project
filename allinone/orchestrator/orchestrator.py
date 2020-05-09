@@ -22,17 +22,17 @@ zk.ensure_path("/CC")
 app = Flask(__name__)
 table = {}
 
-@zk.ChildrenWatch("/CC")
-def start_zookeeping(children):
-    print("There are %s children with names %s" % (len(children), children))
-    flag = 1
-    for i in children:
-        data,stat = zk.get("CC/"+i)
-        x = data.decode("utf-8")
+# @zk.ChildrenWatch("/CC")
+# def start_zookeeping(children):
+#     print("There are %s children with names %s" % (len(children), children))
+#     flag = 1
+#     for i in children:
+#         data,stat = zk.get("CC/"+i)
+#         x = data.decode("utf-8")
         #print("Child: %s  ---  Data: %s" % (i, data.decode("utf-8")))
-        if x=="master" :
-            print("{} is the master".format(i))
-            flag = 0
+        # if x=="master" :
+        #     print("{} is the master".format(i))
+            # flag = 0
     # if flag and children:
         # zk.set("CC/"+children[0],b'master')
 

@@ -4,13 +4,13 @@ import json
 import pika
 import sys
 print("hi")
-from kazoo.client import KazooClient
-zk = KazooClient(hosts='zookeeper:2181')
-zk.start()
-zk.ensure_path("/CC")
+# from kazoo.client import KazooClient
+# zk = KazooClient(hosts='zookeeper:2181')
+# zk.start()
+# zk.ensure_path("/CC")
 
 def slave_first():
-    response = requests.post('http://orchestrator:12345/api/v1/db/new_slave')
+    response = requests.post('http://orchestrator:80/api/v1/db/new_slave')
     queries = response.json()
     print(queries)
 
@@ -97,24 +97,24 @@ def on_request(ch, method, props, body):
 
 channel.basic_qos(prefetch_count=1)
 # channel1.basic_qos(prefetch_count=1)
-def changeToMaster(data, stat):
-    if(data.decode("utf-8")=="slave"):
-        return
-    global connection,channel,channel1
-    connection.close()
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
-    channel = connection.channel()
-    channel1 = connection.channel()
-    channel.queue_declare(queue='writeQ', durable=True)
-    channel.basic_consume(queue='writeQ', on_message_callback=callback_master, auto_ack=True)
-    channel1.exchange_declare(exchange='syncQ', exchange_type='fanout')
-    print(" [x] Awaiting RPC requests as master")
-    channel.start_consuming()
+# def changeToMaster(data, stat):
+#     if(data.decode("utf-8")=="slave"):
+#         return
+#     global connection,channel,channel1
+#     connection.close()
+#     connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+#     channel = connection.channel()
+#     channel1 = connection.channel()
+#     channel.queue_declare(queue='writeQ', durable=True)
+#     channel.basic_consume(queue='writeQ', on_message_callback=callback_master, auto_ack=True)
+#     channel1.exchange_declare(exchange='syncQ', exchange_type='fanout')
+#     print(" [x] Awaiting RPC requests as master")
+#     channel.start_consuming()
 
 print(sys.argv)
 print(sys.argv[1])
 if(sys.argv[1] == "1"):
-    zk.create(path="/CC/node",value=b'master',ephemeral=True, sequence=True)
+    # zk.create(path="/CC/node",value=b'master',ephemeral=True, sequence=True)
     channel.queue_declare(queue='writeQ', durable=True)
     channel.basic_consume(queue='writeQ', on_message_callback=callback_master, auto_ack=True)
     channel1.exchange_declare(exchange='syncQ', exchange_type='fanout')
@@ -122,7 +122,7 @@ if(sys.argv[1] == "1"):
     channel.start_consuming()
 else:
     slave_first()
-    path = zk.create(path="/CC/node",value=b'slave',ephemeral=True, sequence=True)
+    # path = zk.create(path="/CC/node",value=b'slave',ephemeral=True, sequence=True)
     channel.queue_declare(queue='readQ', durable=True)
     channel.basic_consume(queue='readQ', on_message_callback=on_request)
     channel1.exchange_declare(exchange='syncQ', exchange_type='fanout')
@@ -130,6 +130,6 @@ else:
     queue_name = result.method.queue
     channel1.queue_bind(exchange='syncQ', queue=queue_name)
     channel1.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    zk.get(path, watch=changeToMaster)
+    # zk.get(path, watch=changeToMaster)
     channel1.start_consuming()
     channel.start_consuming()
