@@ -30,6 +30,34 @@ number_of_slaves_required = 1
     # if flag and children:
         # zk.set("CC/"+children[0],b'master')
 
+def convert_slave_to_master():
+    global table
+    print("converting a slave to master")
+    var = get_min_cont()
+    print(var)
+    # print(table[var])
+    # print(table)
+    # del table[var]
+    for i in master:
+        print("deleting master")
+        to_be_deleted = i
+    del master[to_be_deleted]
+    master[var] = get_pid(var)
+    # number_of_slaves_present -= 1
+
+
+def get_max_cont():
+    print(table)
+    container_id_max = max(table.items(), key=operator.itemgetter(1))[0]
+    # del table[container_id_max]
+    return container_id_max
+
+def get_min_cont():
+    print(table)
+    container_id_min = min(table.items(), key=operator.itemgetter(1))[0]
+    del table[container_id_min]
+    return container_id_min
+    
 
 def get_all_workers_pid():
     l = []
@@ -46,7 +74,7 @@ def get_all_workers_pid():
 def spawn_master():
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     # client = docker.from_env()
-    string = "python3 worker.py 1"
+    string = "python3 -u worker.py 1"
     # l = string.split()
     container = client.containers.run(image="worker",command=string,detach=True,links={"rabbitmq":"rabbitmq"},network="allinone_default")
     print(container.logs())
@@ -58,7 +86,7 @@ def spawn_master():
 def spawn_slave():
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     # client = docker.from_env()
-    string = "python3 worker.py 0"
+    string = "python3 -u worker.py 0"
     # l = string.split()sla
     container = client.containers.run(image="worker",command=string,detach=True,network="allinone_default")
     print(container.logs())
@@ -197,13 +225,17 @@ class reading(object):
 def start_zookeeping(children):
     global number_of_slaves_required
     print("There are %s children with names %s" % (len(children), children))
-    # flag = 1
+    flag = 0
     for i in children:
         data,stat = zk.get("CC/"+i)
         x = data.decode("utf-8")
         print("Child: %s  ---  Data: %s" % (i, data.decode("utf-8")))
         if x=="master" :
             print("{} is the master".format(i))
+            flag = 1
+    if(flag != 1 and children):
+        zk.set("CC/"+children[0],b'master')
+        convert_slave_to_master()
     print(len(children)-1, number_of_slaves_required)
     if(len(children)-1 < number_of_slaves_required and len(children) != 0):
         print("A slave has been died")
@@ -307,12 +339,6 @@ def crash_master():
     for mast in master:
         stop_docker_using_container_id(mast)
     return jsonify(), 200
-
-def get_max_cont():
-    print(table)
-    container_id_max = max(table.items(), key=operator.itemgetter(1))[0]
-    del table[container_id_max]
-    return container_id_max
 
 @app.route('/api/v1/crash/slave', methods=['POST'])
 def crash_slave():
