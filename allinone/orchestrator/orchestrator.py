@@ -316,6 +316,7 @@ def get_max_cont():
 @app.route('/api/v1/crash/slave', methods=['POST'])
 def crash_slave():
     container_id_max = get_max_cont()
+    time.sleep(60)
     stop_docker_using_container_id(container_id_max)  
     print(table)  
     return jsonify(), 200
