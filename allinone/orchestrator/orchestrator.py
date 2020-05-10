@@ -318,9 +318,10 @@ def get_max_cont():
 def crash_slave():
     container_id_max = get_max_cont()
     # time.sleep(60)
+    pid = get_pid(container_id_max)
     stop_docker_using_container_id(container_id_max)
-    print(table)  
-    return jsonify(), 200
+    print(table)
+    return json.dumps(pid), 200
 
 @app.route('/api/v1/worker/list', methods=['GET'])
 def list_worker():
