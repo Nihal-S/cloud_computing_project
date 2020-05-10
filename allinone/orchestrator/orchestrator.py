@@ -94,7 +94,7 @@ def job():
     else:
         while(number_of_slaves_required < number_of_slaves_present):
             container_id_max = max(table.items(), key=operator.itemgetter(1))[0]
-            time.sleep(60)
+            # time.sleep(60)
             stop_docker_using_container_id(container_id_max)
             del table[container_id_max]
             number_of_slaves_present -= 1
