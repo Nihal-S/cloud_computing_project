@@ -21,22 +21,28 @@ zk.ensure_path("/CC")
 
 app = Flask(__name__)
 table = {}
+master = {}
+number_of_slaves_present = 0
+global number_of_slaves_required
+number_of_slaves_required = 1
 
-# @zk.ChildrenWatch("/CC")
-# def start_zookeeping(children):
-#     print("There are %s children with names %s" % (len(children), children))
-#     flag = 1
-#     for i in children:
-#         data,stat = zk.get("CC/"+i)
-#         x = data.decode("utf-8")
-        #print("Child: %s  ---  Data: %s" % (i, data.decode("utf-8")))
-        # if x=="master" :
-        #     print("{} is the master".format(i))
             # flag = 0
     # if flag and children:
         # zk.set("CC/"+children[0],b'master')
 
-    
+
+def get_all_workers_pid():
+    l = []
+    for slave in table:
+        # print(table[slave])
+        l.append(table[slave])
+    for mast in master:
+        l.append(master[mast])
+    # print(l)
+    l = sorted(l)
+    # print(l)
+    return l
+
 def spawn_master():
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     # client = docker.from_env()
@@ -57,11 +63,13 @@ def spawn_slave():
     container = client.containers.run(image="worker",command=string,detach=True,network="allinone_default")
     print(container.logs())
     container = str(container)
+    table[str(container[12:-1])] = get_pid(str(container[12:-1]))
     print(str(container[12:-1]))
     return str(container[12:-1])
 
 
 def job():
+    global number_of_slaves_required
     print("updating count")
     f = open("read_count.txt","r")
     count = f.readline()
@@ -80,8 +88,8 @@ def job():
     if(number_of_slaves_required > number_of_slaves_present):
         print("printing as spawner")
         while(number_of_slaves_required > number_of_slaves_present):
-            variable = spawn_slave()
-            table[variable] = get_pid(variable)
+            spawn_slave()
+            # table[variable] = get_pid(variable)
             number_of_slaves_present += 1
     else:
         while(number_of_slaves_required < number_of_slaves_present):
@@ -183,6 +191,23 @@ class reading(object):
             self.connection.process_data_events()
         return (self.response.decode("utf-8"))
 
+
+@zk.ChildrenWatch("/CC")
+def start_zookeeping(children):
+    global number_of_slaves_required
+    print("There are %s children with names %s" % (len(children), children))
+    # flag = 1
+    for i in children:
+        data,stat = zk.get("CC/"+i)
+        x = data.decode("utf-8")
+        print("Child: %s  ---  Data: %s" % (i, data.decode("utf-8")))
+        if x=="master" :
+            print("{} is the master".format(i))
+    print(len(children)-1, number_of_slaves_required)
+    if(len(children)-1 < number_of_slaves_required and len(children) != 0):
+        print("A slave has been died")
+        spawn_slave()
+
 @app.route('/api/v1/db/write', methods=['POST'])
 def write_db():
     print("write")
@@ -276,20 +301,44 @@ scheduler.add_job(
 # Shut down the scheduler when exiting the app
 atexit.register(lambda: scheduler.shutdown())
 
+@app.route('/api/v1/crash/master', methods=['POST'])
+def crash_master():
+    for mast in master:
+        stop_docker_using_container_id(mast)
+    return jsonify(), 200
+
+def get_max_cont():
+    print(table)
+    container_id_max = max(table.items(), key=operator.itemgetter(1))[0]
+    del table[container_id_max]
+    return container_id_max
+
+@app.route('/api/v1/crash/slave', methods=['POST'])
+def crash_slave():
+    container_id_max = get_max_cont()
+    stop_docker_using_container_id(container_id_max)  
+    print(table)  
+    return jsonify(), 200
 
 @app.route('/api/v1/worker/list', methods=['GET'])
 def list_worker():
-    client = docker.from_env()
-    return client.containers.list()
+    # client = docker.from_env()
+    # return client.containers.list()
+    something = get_all_workers_pid()
+    print(something)
+    return json.dumps(something), 200
+
 
 if __name__ == '__main__':
     # job()
     # start_zookeeping()
     f = open("logs.txt","w")
     f.close()
-    spawn_master()
+    variable =  spawn_master()
+    master[variable] = get_pid(variable)
     print("master")
-    spawn_slave()
-    print("slave")
+    # number_of_slaves_required = 1
+    # spawn_slave()
+    # print("slave")
     app.debug=False
     app.run(host="0.0.0.0",port=80,use_reloader=False)

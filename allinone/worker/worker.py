@@ -4,10 +4,10 @@ import json
 import pika
 import sys
 print("hi")
-# from kazoo.client import KazooClient
-# zk = KazooClient(hosts='zookeeper:2181')
-# zk.start()
-# zk.ensure_path("/CC")
+from kazoo.client import KazooClient
+zk = KazooClient(hosts='zookeeper:2181')
+zk.start()
+zk.ensure_path("/CC")
 
 def slave_first():
     response = requests.post('http://orchestrator:80/api/v1/db/new_slave')
@@ -114,7 +114,7 @@ channel.basic_qos(prefetch_count=1)
 print(sys.argv)
 print(sys.argv[1])
 if(sys.argv[1] == "1"):
-    # zk.create(path="/CC/node",value=b'master',ephemeral=True, sequence=True)
+    zk.create(path="/CC/node",value=b'master',ephemeral=True, sequence=True)
     channel.queue_declare(queue='writeQ', durable=True)
     channel.basic_consume(queue='writeQ', on_message_callback=callback_master, auto_ack=True)
     channel1.exchange_declare(exchange='syncQ', exchange_type='fanout')
@@ -122,7 +122,7 @@ if(sys.argv[1] == "1"):
     channel.start_consuming()
 else:
     slave_first()
-    # path = zk.create(path="/CC/node",value=b'slave',ephemeral=True, sequence=True)
+    path = zk.create(path="/CC/node",value=b'slave',ephemeral=True, sequence=True)
     channel.queue_declare(queue='readQ', durable=True)
     channel.basic_consume(queue='readQ', on_message_callback=on_request)
     channel1.exchange_declare(exchange='syncQ', exchange_type='fanout')
