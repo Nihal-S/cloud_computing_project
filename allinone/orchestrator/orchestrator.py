@@ -347,7 +347,9 @@ def crash_slave():
     pid = get_pid(container_id_max)
     stop_docker_using_container_id(container_id_max)
     print(table)
-    return json.dumps(pid), 200
+    l = []
+    l.append(pid)
+    return json.dumps(l), 200
 
 @app.route('/api/v1/worker/list', methods=['GET'])
 def list_worker():
