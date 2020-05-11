@@ -346,6 +346,7 @@ def crash_slave():
     # time.sleep(60)
     pid = get_pid(container_id_max)
     stop_docker_using_container_id(container_id_max)
+    del table[container_id_max]
     print(table)
     l = []
     l.append(pid)
